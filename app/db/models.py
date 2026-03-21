@@ -1,18 +1,14 @@
 import enum
 from datetime import datetime
-
 from sqlalchemy import BigInteger, Boolean, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.db.base import Base
-
 
 class OrderStatus(str, enum.Enum):
     pending = "pending"
     in_process = "in_process"
     completed = "completed"
     cancelled = "cancelled"
-
 
 class UserProfile(Base):
     __tablename__ = "user_profiles"
@@ -28,7 +24,6 @@ class UserProfile(Base):
     orders: Mapped[list["Order"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     cart_items: Mapped[list["CartItem"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
-
 class AdminChatBinding(Base):
     __tablename__ = "admin_chat_bindings"
 
@@ -39,16 +34,15 @@ class AdminChatBinding(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-
 class ShopConfig(Base):
     __tablename__ = "shop_configs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    welcome_text: Mapped[str] = mapped_column(Text, default="Вітаю у магазині мерчу")
+    welcome_text: Mapped[str] = mapped_column(Text, default="Вітаємо у нашому магазині мерчу! 🖤")
     support_text: Mapped[str] = mapped_column(Text, default="Для питань звертайтесь до менеджера")
     currency: Mapped[str] = mapped_column(String(10), default="UAH")
+    mono_jar_url: Mapped[str] = mapped_column(String(255), default="https://send.monobank.ua/")
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
 
 class Product(Base):
     __tablename__ = "products"
@@ -63,7 +57,6 @@ class Product(Base):
 
     sizes: Mapped[list["ProductSize"]] = relationship(back_populates="product", cascade="all, delete-orphan")
 
-
 class ProductSize(Base):
     __tablename__ = "product_sizes"
     __table_args__ = (UniqueConstraint("product_id", "size", name="uq_product_size"),)
@@ -74,7 +67,6 @@ class ProductSize(Base):
     price: Mapped[float] = mapped_column(Numeric(10, 2))
 
     product: Mapped[Product] = relationship(back_populates="sizes")
-
 
 class CartItem(Base):
     __tablename__ = "cart_items"
@@ -89,26 +81,23 @@ class CartItem(Base):
 
     user: Mapped[UserProfile] = relationship(back_populates="cart_items")
 
-
 class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     telegram_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.telegram_id", ondelete="CASCADE"), index=True)
     status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), default=OrderStatus.pending)
-    payment_method: Mapped[str] = mapped_column(String(100))
     address: Mapped[str] = mapped_column(Text)
     phone: Mapped[str] = mapped_column(String(50))
-    note: Mapped[str | None] = mapped_column(Text, nullable=True)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2))
     currency: Mapped[str] = mapped_column(String(10), default="UAH")
+    receipt_photo_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     admin_message_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user: Mapped[UserProfile] = relationship(back_populates="orders")
     items: Mapped[list["OrderItem"]] = relationship(back_populates="order", cascade="all, delete-orphan")
-
 
 class OrderItem(Base):
     __tablename__ = "order_items"

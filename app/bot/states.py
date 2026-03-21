@@ -1,12 +1,16 @@
 from aiogram.fsm.state import State, StatesGroup
 
+class CheckoutState(StatesGroup):
+    waiting_contact = State()
+    waiting_delivery = State()
+    waiting_receipt = State()
 
-class AdminProductPhotoState(StatesGroup):
+class AdminProductState(StatesGroup):
+    waiting_title = State()
+    waiting_description = State()
+    waiting_sizes = State()
     waiting_photo = State()
 
-
-class CheckoutState(StatesGroup):
-    waiting_payment_method = State()
-    waiting_phone = State()
-    waiting_address = State()
-    waiting_note = State()
+class AdminConfigState(StatesGroup):
+    waiting_mono_url = State()
+    waiting_welcome_text = State()

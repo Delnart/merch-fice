@@ -1,18 +1,14 @@
 from decimal import Decimal
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.db.models import CartItem, Order, OrderItem, OrderStatus, Product, UserProfile
-
 
 async def create_order_from_cart(
     session: AsyncSession,
     telegram_id: int,
-    payment_method: str,
     phone: str,
     address: str,
-    note: str | None,
+    receipt_photo_id: str,
     currency: str,
 ) -> Order:
     user_query = select(UserProfile).where(UserProfile.telegram_id == telegram_id)
@@ -31,10 +27,9 @@ async def create_order_from_cart(
     order = Order(
         telegram_id=telegram_id,
         status=OrderStatus.pending,
-        payment_method=payment_method,
         phone=phone,
         address=address,
-        note=note,
+        receipt_photo_id=receipt_photo_id,
         total_amount=Decimal("0"),
         currency=currency,
     )
@@ -61,16 +56,13 @@ async def create_order_from_cart(
     await session.flush()
     return order
 
-
 async def get_order(session: AsyncSession, order_id: int) -> Order | None:
     result = await session.execute(select(Order).where(Order.id == order_id))
     return result.scalar_one_or_none()
 
-
 async def set_order_status(session: AsyncSession, order: Order, status: OrderStatus) -> None:
     order.status = status
     await session.flush()
-
 
 async def set_order_admin_message(session: AsyncSession, order: Order, message_id: int) -> None:
     order.admin_message_id = message_id
