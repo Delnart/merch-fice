@@ -21,7 +21,7 @@ dp = build_dispatcher()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # await init_db()
+    await init_db()
     yield
 
 
