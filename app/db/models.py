@@ -10,6 +10,11 @@ class OrderStatus(str, enum.Enum):
     completed = "completed"
     cancelled = "cancelled"
 
+class DeliveryMethod(str, enum.Enum):
+    nova_poshta = "nova_poshta"
+    campus = "campus"
+    dayf = "dayf"
+
 class UserProfile(Base):
     __tablename__ = "user_profiles"
 
@@ -23,6 +28,19 @@ class UserProfile(Base):
 
     orders: Mapped[list["Order"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     cart_items: Mapped[list["CartItem"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    recipients: Mapped[list["Recipient"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+class Recipient(Base):
+    __tablename__ = "recipients"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    telegram_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.telegram_id", ondelete="CASCADE"), index=True)
+    full_name: Mapped[str] = mapped_column(String(255))
+    phone: Mapped[str] = mapped_column(String(50))
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[UserProfile] = relationship(back_populates="recipients")
 
 class AdminChatBinding(Base):
     __tablename__ = "admin_chat_bindings"
@@ -42,6 +60,7 @@ class ShopConfig(Base):
     support_text: Mapped[str] = mapped_column(Text, default="Для питань звертайтесь до менеджера")
     currency: Mapped[str] = mapped_column(String(10), default="UAH")
     mono_jar_url: Mapped[str] = mapped_column(String(255), default="https://send.monobank.ua/")
+    is_dayf_delivery_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Product(Base):
@@ -87,12 +106,15 @@ class Order(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     telegram_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.telegram_id", ondelete="CASCADE"), index=True)
     status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), default=OrderStatus.pending)
+    delivery_method: Mapped[DeliveryMethod | None] = mapped_column(Enum(DeliveryMethod), nullable=True)
     address: Mapped[str] = mapped_column(Text)
     phone: Mapped[str] = mapped_column(String(50))
+    recipient_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2))
     currency: Mapped[str] = mapped_column(String(10), default="UAH")
     receipt_photo_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     admin_message_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    processed_by_admin: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

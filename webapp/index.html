@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Merch Store</title>
+    <link rel="stylesheet" href="/webapp/css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <!-- ── Bottom Navigation ──────────────────────────────────────────── -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" data-page="catalog">
+            <span class="nav-icon">🛍</span>
+            <span>Каталог</span>
+        </button>
+        <button class="nav-item" data-page="cart">
+            <span class="nav-icon">🛒</span>
+            <span>Кошик</span>
+            <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-page="settings">
+            <span class="nav-icon">⚙️</span>
+            <span>Отримувачі</span>
+        </button>
+        <button class="nav-item" data-page="admin" id="adminNavItem" style="display:none">
+            <span class="nav-icon">🔧</span>
+            <span>Адмін</span>
+        </button>
+    </nav>
+
+    <!-- ── Catalog Page ───────────────────────────────────────────────── -->
+    <div class="page active" id="page-catalog">
+        <div class="app-header">
+            <h1>🛍 Каталог</h1>
+        </div>
+        <div id="catalogGrid" class="product-grid"></div>
+        <div id="catalogLoading" class="loading"><div class="spinner"></div></div>
+        <div id="catalogEmpty" class="empty-state" style="display:none">
+            <div class="empty-icon">😔</div>
+            <div class="empty-text">Зараз немає доступних товарів</div>
+        </div>
+    </div>
+
+    <!-- ── Product Detail Page ────────────────────────────────────────── -->
+    <div class="page" id="page-product">
+        <div class="app-header">
+            <button class="back-btn" onclick="app.navigate('catalog')">←</button>
+            <h1 id="productDetailTitle">Товар</h1>
+        </div>
+        <div id="productDetail"></div>
+    </div>
+
+    <!-- ── Cart Page ──────────────────────────────────────────────────── -->
+    <div class="page" id="page-cart">
+        <div class="app-header">
+            <h1>🛒 Кошик</h1>
+        </div>
+        <div id="cartContent"></div>
+    </div>
+
+    <!-- ── Checkout Page ──────────────────────────────────────────────── -->
+    <div class="page" id="page-checkout">
+        <div class="app-header">
+            <button class="back-btn" onclick="app.navigate('cart')">←</button>
+            <h1>📝 Оформлення</h1>
+        </div>
+        <div id="checkoutContent"></div>
+    </div>
+
+    <!-- ── Settings (Recipients) Page ─────────────────────────────────── -->
+    <div class="page" id="page-settings">
+        <div class="app-header">
+            <h1>👤 Отримувачі</h1>
+        </div>
+        <div id="settingsContent"></div>
+    </div>
+
+    <!-- ── Admin Page ─────────────────────────────────────────────────── -->
+    <div class="page" id="page-admin">
+        <div class="app-header">
+            <h1>🔧 Управління товарами</h1>
+        </div>
+        <div id="adminContent"></div>
+    </div>
+
+    <!-- ── Admin Edit Product Page ────────────────────────────────────── -->
+    <div class="page" id="page-admin-edit">
+        <div class="app-header">
+            <button class="back-btn" onclick="app.navigate('admin')">←</button>
+            <h1 id="adminEditTitle">Товар</h1>
+        </div>
+        <div id="adminEditContent"></div>
+    </div>
+
+    <!-- ── Order Success Page ─────────────────────────────────────────── -->
+    <div class="page" id="page-success">
+        <div class="success-page">
+            <div class="success-icon">✅</div>
+            <div class="success-title">Замовлення оформлено!</div>
+            <div class="success-text" id="successText">Ваше замовлення прийнято. Ми перевіримо оплату та повідомимо вас.</div>
+            <button class="btn-primary" onclick="app.navigate('catalog')">🛍 Повернутись до каталогу</button>
+        </div>
+    </div>
+
+    <!-- ── Toast ──────────────────────────────────────────────────────── -->
+    <div class="toast" id="toast"></div>
+
+    <script src="/webapp/js/api.js"></script>
+    <script src="/webapp/js/catalog.js"></script>
+    <script src="/webapp/js/cart.js"></script>
+    <script src="/webapp/js/checkout.js"></script>
+    <script src="/webapp/js/admin.js"></script>
+    <script src="/webapp/js/settings.js"></script>
+    <script src="/webapp/js/app.js"></script>
+</body>
+</html>

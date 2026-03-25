@@ -1,13 +1,18 @@
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from aiogram import Bot
 from aiogram.types import Update
 from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.bot.router import build_dispatcher
 from app.config import settings
 from app.db.init_db import init_db
+from app.webapp_api import router as webapp_router
 
 
 bot = Bot(token=settings.bot_token)
@@ -16,11 +21,26 @@ dp = build_dispatcher()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    await init_db()
+    # await init_db()
     yield
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(webapp_router)
+
+# Mount static files for the Mini App
+webapp_dir = Path(__file__).resolve().parent.parent / "webapp"
+if webapp_dir.is_dir():
+    app.mount("/webapp", StaticFiles(directory=str(webapp_dir), html=True), name="webapp")
 
 
 @app.get("/health")

@@ -1,7 +1,7 @@
 from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.models import CartItem, Order, OrderItem, OrderStatus, Product, UserProfile
+from app.db.models import CartItem, Order, OrderItem, OrderStatus, Product, UserProfile, DeliveryMethod
 
 async def create_order_from_cart(
     session: AsyncSession,
@@ -10,6 +10,7 @@ async def create_order_from_cart(
     address: str,
     receipt_photo_id: str,
     currency: str,
+    delivery_method: str | None = None
 ) -> Order:
     user_query = select(UserProfile).where(UserProfile.telegram_id == telegram_id)
     user_result = await session.execute(user_query)
@@ -23,10 +24,13 @@ async def create_order_from_cart(
     if not rows:
         raise ValueError("empty_cart")
 
+    method_enum = DeliveryMethod(delivery_method) if delivery_method else None
+
     total = Decimal("0")
     order = Order(
         telegram_id=telegram_id,
         status=OrderStatus.pending,
+        delivery_method=method_enum,
         phone=phone,
         address=address,
         receipt_photo_id=receipt_photo_id,
