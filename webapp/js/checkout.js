@@ -14,9 +14,7 @@ const checkout = {
 
         try {
             const [recipientsData, configData, cartData] = await Promise.all([
-                api.getRecipients(),
-                api.getConfig(),
-                api.getCart(),
+                api.getRecipients(), api.getConfig(), api.getCart(),
             ]);
             this.recipients = recipientsData.recipients;
             this.config = configData;
@@ -25,18 +23,13 @@ const checkout = {
             this.receiptFile = null;
 
             if (!cartData.items.length) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🛒</div>
-                        <div class="empty-text">Кошик порожній</div>
-                        <button class="btn-primary" style="max-width:250px;margin:0 auto" onclick="app.navigate('catalog')">🛍 До каталогу</button>
-                    </div>`;
+                container.innerHTML = `<div class="empty-state"><div class="empty-text">Кошик порожній</div>
+                    <button class="btn-primary" style="max-width:240px;margin:0 auto" onclick="app.navigate('catalog')">До каталогу</button></div>`;
                 return;
             }
-
             this.render(cartData);
         } catch (e) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Помилка завантаження</div></div>`;
+            container.innerHTML = `<div class="empty-state"><div class="empty-text">Помилка завантаження</div></div>`;
         }
     },
 
@@ -45,23 +38,21 @@ const checkout = {
         const defaultRec = this.recipients.find(r => r.is_default);
 
         container.innerHTML = `
-            <!-- Order Summary -->
             <div class="section-title">Ваше замовлення</div>
             <div class="card" style="margin-bottom:16px;padding:14px">
                 ${cartData.items.map(i => `
                     <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.85rem">
-                        <span>${this._esc(i.title)} (${i.size}) x${i.quantity}</span>
+                        <span>${this._esc(i.title)} (${i.size}) ×${i.quantity}</span>
                         <span style="font-weight:600">${i.line_total} грн</span>
                     </div>
                 `).join('')}
                 <div class="divider" style="margin:10px 0"></div>
                 <div style="display:flex;justify-content:space-between;font-weight:700">
-                    <span>Разом:</span>
+                    <span>Разом</span>
                     <span>${cartData.total} грн</span>
                 </div>
             </div>
 
-            <!-- Recipient Selection -->
             <div class="section-title">Отримувач</div>
             ${this.recipients.length ? `
                 ${this.recipients.map(r => `
@@ -69,15 +60,15 @@ const checkout = {
                          onclick="checkout.selectRecipient(${r.id}, this)" data-recipient-id="${r.id}">
                         <div class="radio-dot"></div>
                         <div>
-                            <div style="font-weight:600;font-size:0.9rem">${this._esc(r.full_name)}</div>
-                            <div style="font-size:0.8rem;color:var(--tg-hint)">${this._esc(r.phone)}</div>
+                            <div style="font-weight:600;font-size:0.88rem">${this._esc(r.full_name)}</div>
+                            <div style="font-size:0.78rem;color:var(--text-secondary)">${this._esc(r.phone)}</div>
                         </div>
                         ${r.is_default ? '<span class="default-badge" style="margin-left:auto">За замовч.</span>' : ''}
                     </div>
                 `).join('')}
                 <div class="selection-card" onclick="checkout.selectNewRecipient(this)" id="newRecipientCard">
                     <div class="radio-dot"></div>
-                    <div class="selection-card-text">➕ Інший отримувач</div>
+                    <div class="selection-card-text">Інший отримувач</div>
                 </div>
             ` : ''}
 
@@ -96,22 +87,18 @@ const checkout = {
                 </label>
             </div>
 
-            <!-- Delivery Method -->
             <div class="section-title">Спосіб доставки</div>
             <div class="selection-card" onclick="checkout.selectDelivery('nova_poshta', this)">
                 <div class="radio-dot"></div>
-                <span class="selection-card-icon">📦</span>
                 <span class="selection-card-text">Нова Пошта</span>
             </div>
             <div class="selection-card" onclick="checkout.selectDelivery('campus', this)">
                 <div class="radio-dot"></div>
-                <span class="selection-card-icon">🏫</span>
                 <span class="selection-card-text">В корпусі</span>
             </div>
             ${this.config.is_dayf_delivery_enabled ? `
                 <div class="selection-card" onclick="checkout.selectDelivery('dayf', this)">
                     <div class="radio-dot"></div>
-                    <span class="selection-card-icon">🎉</span>
                     <span class="selection-card-text">На DayF</span>
                 </div>
             ` : ''}
@@ -123,40 +110,32 @@ const checkout = {
                 </div>
             </div>
 
-            <!-- Payment -->
             <div class="section-title">Оплата</div>
             <div class="card" style="padding:14px;margin-bottom:16px">
-                <div style="font-size:0.9rem;margin-bottom:8px">
-                    💳 Оплатіть <b>${cartData.total} грн</b> за посиланням:
+                <div style="font-size:0.88rem;margin-bottom:8px">
+                    Оплатіть <b>${cartData.total} грн</b> за посиланням:
                 </div>
-                <a href="${this.config.mono_jar_url}" target="_blank" class="btn-secondary" style="text-align:center;display:block;margin-bottom:12px">
-                    💰 Відкрити Банку Monobank
+                <a href="${this.config.mono_jar_url}" target="_blank" class="btn-secondary" style="text-align:center;display:block;margin-bottom:10px">
+                    Відкрити Банку Monobank
                 </a>
-                <div style="font-size:0.85rem;color:var(--tg-hint)">Після оплати завантажте скріншот квитанції нижче</div>
+                <div style="font-size:0.82rem;color:var(--text-secondary)">Після оплати завантажте скріншот квитанції</div>
             </div>
 
-            <!-- Receipt Upload -->
             <div class="section-title">Скріншот квитанції</div>
             <div class="file-upload-area" id="receiptUploadArea">
                 <input type="file" accept="image/*" onchange="checkout.onReceiptSelected(event)" id="receiptInput">
                 <div id="receiptPreviewContainer">
-                    <div class="file-upload-icon">📸</div>
-                    <div class="file-upload-text">Натисніть або перетягніть скріншот</div>
+                    <div class="file-upload-icon">↑</div>
+                    <div class="file-upload-text">Натисніть, щоб завантажити</div>
                 </div>
             </div>
 
-            <!-- Submit -->
-            <button class="btn-primary" id="checkoutSubmitBtn" onclick="checkout.submit()" 
-                    style="margin-top:20px" disabled>
-                ✅ Оформити замовлення
+            <button class="btn-primary" id="checkoutSubmitBtn" onclick="checkout.submit()" style="margin-top:20px" disabled>
+                Оформити замовлення
             </button>
         `;
 
-        // Auto-select default recipient
-        if (defaultRec) {
-            this.selectedRecipientId = defaultRec.id;
-        }
-
+        if (defaultRec) this.selectedRecipientId = defaultRec.id;
         this.validateForm();
     },
 
@@ -178,22 +157,12 @@ const checkout = {
     },
 
     selectDelivery(method, el) {
-        // Deselect previous
-        const allCards = el.parentElement.querySelectorAll ? 
-            Array.from(document.querySelectorAll('#checkoutContent .selection-card')).filter(c => 
-                c.onclick?.toString().includes('selectDelivery')
-            ) : [];
-        // Simpler approach: just toggle based on data
         document.querySelectorAll('#checkoutContent .selection-card').forEach(c => {
-            if (c.onclick && c.onclick.toString().includes('selectDelivery')) {
-                c.classList.remove('selected');
-            }
+            if (c.onclick && c.onclick.toString().includes('selectDelivery')) c.classList.remove('selected');
         });
         el.classList.add('selected');
-
         this.selectedDelivery = method;
-        const npBlock = document.getElementById('npAddressBlock');
-        npBlock.style.display = method === 'nova_poshta' ? 'block' : 'none';
+        document.getElementById('npAddressBlock').style.display = method === 'nova_poshta' ? 'block' : 'none';
         this.validateForm();
     },
 
@@ -201,16 +170,12 @@ const checkout = {
         const file = e.target.files[0];
         if (!file) return;
         this.receiptFile = file;
-        
-        const area = document.getElementById('receiptUploadArea');
-        area.classList.add('has-file');
-        
+        document.getElementById('receiptUploadArea').classList.add('has-file');
         const reader = new FileReader();
         reader.onload = (ev) => {
             document.getElementById('receiptPreviewContainer').innerHTML = `
-                <img class="file-upload-preview" src="${ev.target.result}" alt="Receipt">
-                <div class="file-upload-text" style="margin-top:8px">✅ Фото завантажено</div>
-            `;
+                <img class="file-upload-preview" src="${ev.target.result}" alt="">
+                <div class="file-upload-text" style="margin-top:8px">Фото завантажено</div>`;
         };
         reader.readAsDataURL(file);
         this.validateForm();
@@ -219,7 +184,6 @@ const checkout = {
     validateForm() {
         const btn = document.getElementById('checkoutSubmitBtn');
         if (!btn) return;
-
         const hasRecipient = this.selectedRecipientId || (
             document.getElementById('checkoutName')?.value.trim() &&
             document.getElementById('checkoutPhone')?.value.trim()
@@ -228,19 +192,17 @@ const checkout = {
         const hasAddress = this.selectedDelivery !== 'nova_poshta' || 
                           document.getElementById('checkoutAddress')?.value.trim();
         const hasReceipt = !!this.receiptFile;
-
         btn.disabled = !(hasRecipient && hasDelivery && hasAddress && hasReceipt);
     },
 
     async submit() {
         const btn = document.getElementById('checkoutSubmitBtn');
         btn.disabled = true;
-        btn.innerHTML = '⏳ Оформлюємо...';
+        btn.textContent = 'Оформлюємо...';
 
         try {
             const formData = new FormData();
             formData.append('delivery_method', this.selectedDelivery);
-            
             const address = this.selectedDelivery === 'nova_poshta' 
                 ? document.getElementById('checkoutAddress').value.trim()
                 : (this.selectedDelivery === 'campus' ? 'В корпусі' : 'На DayF');
@@ -253,7 +215,6 @@ const checkout = {
                 formData.append('recipient_phone', document.getElementById('checkoutPhone').value.trim());
                 formData.append('save_recipient', document.getElementById('checkoutSaveRecipient').checked);
             }
-
             formData.append('receipt_photo', this.receiptFile);
 
             const result = await api.checkout(formData);
@@ -263,21 +224,14 @@ const checkout = {
             await cart.updateBadge();
         } catch (e) {
             btn.disabled = false;
-            btn.innerHTML = '✅ Оформити замовлення';
-            app.showToast('❌ Помилка оформлення: ' + e.message);
+            btn.textContent = 'Оформити замовлення';
+            app.showToast('Помилка: ' + e.message);
         }
     },
 
-    _esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-    }
+    _esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 };
 
-// Live validation on input
 document.addEventListener('input', (e) => {
-    if (['checkoutName', 'checkoutPhone', 'checkoutAddress'].includes(e.target.id)) {
-        checkout.validateForm();
-    }
+    if (['checkoutName', 'checkoutPhone', 'checkoutAddress'].includes(e.target.id)) checkout.validateForm();
 });

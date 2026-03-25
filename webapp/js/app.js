@@ -1,108 +1,70 @@
 /**
- * Main SPA router and initialization.
+ * App router & toast utility.
  */
 const app = {
     currentPage: 'catalog',
-    isAdmin: false,
     _toastTimeout: null,
 
-    async init() {
-        // Telegram WebApp setup
-        if (window.Telegram?.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-            tg.enableClosingConfirmation();
-        }
-
-        // Check URL params for initial page
-        const params = new URLSearchParams(window.location.search);
-        const initialPage = params.get('page');
-
-        // Setup bottom nav
+    init() {
+        /* nav clicks */
         document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.navigate(btn.dataset.page);
-            });
+            btn.addEventListener('click', () => this.navigate(btn.dataset.page));
         });
 
-        // Check admin status
+        /* initial data */
+        catalog.load();
+        cart.updateBadge();
         this.checkAdmin();
 
-        // Load initial page
-        if (initialPage === 'admin') {
-            this.navigate('admin');
-        } else {
-            this.navigate('catalog');
+        /* deep link from URL, e.g. ?page=admin */
+        const urlPage = new URLSearchParams(window.location.search).get('page');
+        if (urlPage) this.navigate(urlPage);
+    },
+
+    navigate(page) {
+        this.currentPage = page;
+
+        /* hide all pages, show target */
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById('page-' + page);
+        if (target) target.classList.add('active');
+
+        /* update nav */
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const navBtn = document.querySelector(`.nav-item[data-page="${page}"]`);
+        if (navBtn) navBtn.classList.add('active');
+
+        /* load page data */
+        switch (page) {
+            case 'catalog':  catalog.load(); break;
+            case 'cart':     cart.load(); break;
+            case 'checkout': checkout.load(); break;
+            case 'settings': settings.load(); break;
+            case 'admin':    admin.load(); break;
         }
 
-        // Update cart badge
-        cart.updateBadge();
+        window.scrollTo(0, 0);
+    },
+
+    showToast(message, duration = 2500) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+
+        if (this._toastTimeout) clearTimeout(this._toastTimeout);
+        this._toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, duration);
     },
 
     async checkAdmin() {
         try {
-            await api.checkAdmin();
-            this.isAdmin = true;
-            document.getElementById('adminNavItem').style.display = 'flex';
-        } catch {
-            this.isAdmin = false;
-        }
-    },
-
-    navigate(page) {
-        // Hide all pages
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        
-        // Show target page
-        const target = document.getElementById(`page-${page}`);
-        if (target) {
-            target.classList.add('active');
-        }
-
-        // Update nav active state (only for main pages)
-        const mainPages = ['catalog', 'cart', 'settings', 'admin'];
-        document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.page === page);
-        });
-
-        // Show/hide bottom nav (hide on subpages)
-        const hideNav = ['product', 'checkout', 'admin-edit', 'success'].includes(page);
-        document.getElementById('bottomNav').style.display = hideNav ? 'none' : 'flex';
-
-        this.currentPage = page;
-
-        // Load page data
-        switch (page) {
-            case 'catalog':
-                catalog.load();
-                break;
-            case 'cart':
-                cart.load();
-                break;
-            case 'checkout':
-                checkout.load();
-                break;
-            case 'settings':
-                settingsPage.load();
-                break;
-            case 'admin':
-                admin.load();
-                break;
-        }
-    },
-
-    showToast(message, type = '') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = 'toast show' + (type ? ` ${type}` : '');
-        
-        if (this._toastTimeout) clearTimeout(this._toastTimeout);
-        this._toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 2500);
-    },
+            const data = await api.checkAdmin();
+            if (data.is_admin) {
+                document.getElementById('adminNavItem').style.display = '';
+            }
+        } catch (e) {}
+    }
 };
 
-// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => app.init());

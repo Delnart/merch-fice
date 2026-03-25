@@ -16,7 +16,6 @@ const catalog = {
         try {
             const data = await api.getCatalog();
             this.products = data.products;
-
             loading.style.display = 'none';
 
             if (!this.products.length) {
@@ -28,7 +27,7 @@ const catalog = {
                 <div class="card product-card" onclick="catalog.openProduct(${p.id})">
                     ${p.photo_url
                         ? `<img class="product-image" src="${p.photo_url}" alt="${this._esc(p.title)}" loading="lazy">`
-                        : `<div class="product-image" style="display:flex;align-items:center;justify-content:center;font-size:2rem">👕</div>`
+                        : `<div class="product-image" style="display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:0.9rem">Фото</div>`
                     }
                     <div class="product-info">
                         <div class="product-title">${this._esc(p.title)}</div>
@@ -38,7 +37,7 @@ const catalog = {
             `).join('');
         } catch (e) {
             loading.style.display = 'none';
-            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Помилка завантаження</div></div>`;
+            grid.innerHTML = `<div class="empty-state"><div class="empty-text">Помилка завантаження</div></div>`;
         }
     },
 
@@ -72,11 +71,11 @@ const catalog = {
                 </div>
                 
                 <button class="btn-primary" id="addToCartBtn" onclick="catalog.addToCart(${p.id})">
-                    🛒 Додати до кошика
+                    Додати до кошика
                 </button>
             `;
         } catch (e) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Товар не знайдено</div></div>`;
+            container.innerHTML = `<div class="empty-state"><div class="empty-text">Товар не знайдено</div></div>`;
         }
     },
 
@@ -87,34 +86,24 @@ const catalog = {
 
     async addToCart(productId) {
         const selected = document.querySelector('#sizeSelector .size-btn.selected');
-        if (!selected) {
-            app.showToast('Оберіть розмір');
-            return;
-        }
+        if (!selected) { app.showToast('Оберіть розмір'); return; }
 
         const btn = document.getElementById('addToCartBtn');
         btn.disabled = true;
-        btn.textContent = '⏳ Додаємо...';
+        btn.textContent = 'Додаємо...';
 
         try {
             await api.addToCart(productId, selected.dataset.size);
-            app.showToast('✅ Додано в кошик!', 'success');
+            app.showToast('Додано в кошик');
             await cart.updateBadge();
-            btn.textContent = '✅ Додано!';
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerHTML = '🛒 Додати до кошика';
-            }, 1500);
+            btn.textContent = 'Додано';
+            setTimeout(() => { btn.disabled = false; btn.textContent = 'Додати до кошика'; }, 1500);
         } catch (e) {
             btn.disabled = false;
-            btn.innerHTML = '🛒 Додати до кошика';
-            app.showToast('❌ Помилка');
+            btn.textContent = 'Додати до кошика';
+            app.showToast('Помилка');
         }
     },
 
-    _esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-    }
+    _esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 };

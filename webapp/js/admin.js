@@ -1,5 +1,5 @@
 /**
- * Admin module — product management (list, create, edit, toggle, photo upload).
+ * Admin module — product management.
  */
 const admin = {
     products: [],
@@ -8,31 +8,23 @@ const admin = {
     async load() {
         const container = document.getElementById('adminContent');
         container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
         try {
             const data = await api.getAdminProducts();
             this.products = data.products;
             this.render();
         } catch (e) {
             if (e.message.includes('403') || e.message.includes('not_admin') || e.message.includes('no_admin_chat')) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🔒</div>
-                        <div class="empty-text">Немає доступу до адмін-панелі</div>
-                    </div>`;
+                container.innerHTML = `<div class="empty-state"><div class="empty-text">Немає доступу</div></div>`;
             } else {
-                container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Помилка завантаження</div></div>`;
+                container.innerHTML = `<div class="empty-state"><div class="empty-text">Помилка завантаження</div></div>`;
             }
         }
     },
 
     render() {
         const container = document.getElementById('adminContent');
-
         container.innerHTML = `
-            <button class="btn-primary" onclick="admin.openCreate()" style="margin-bottom:16px">
-                ➕ Додати товар
-            </button>
+            <button class="btn-primary" onclick="admin.openCreate()" style="margin-bottom:16px">Додати товар</button>
             ${this.products.length ? `
                 <div class="card">
                     ${this.products.map((p, i) => `
@@ -40,26 +32,21 @@ const admin = {
                         <div class="admin-product-item" onclick="admin.openEdit(${p.id})">
                             ${p.photo_url
                                 ? `<img class="admin-product-image" src="${p.photo_url}" alt="">`
-                                : `<div class="admin-product-image" style="display:flex;align-items:center;justify-content:center;font-size:1.3rem">👕</div>`
+                                : `<div class="admin-product-image" style="display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:0.7rem">Фото</div>`
                             }
                             <div class="admin-product-info">
                                 <div class="admin-product-title">${this._esc(p.title)}</div>
-                                <div style="font-size:0.8rem;color:var(--tg-hint)">
+                                <div style="font-size:0.78rem;color:var(--text-secondary)">
                                     ${p.sizes.map(s => `${s.size}: ${s.price}₴`).join(', ')}
                                 </div>
                             </div>
                             <span class="admin-product-status ${p.is_active ? 'active' : 'archived'}">
-                                ${p.is_active ? '🟢' : '🔴'}
+                                ${p.is_active ? 'Активний' : 'Архів'}
                             </span>
                         </div>
                     `).join('')}
                 </div>
-            ` : `
-                <div class="empty-state">
-                    <div class="empty-icon">📦</div>
-                    <div class="empty-text">Товарів ще немає</div>
-                </div>
-            `}
+            ` : `<div class="empty-state"><div class="empty-text">Товарів ще немає</div></div>`}
         `;
     },
 
@@ -97,7 +84,6 @@ const admin = {
                 <input class="form-input" id="adminSizes" value="${sizesStr}" placeholder="S:500, M:550, L:600">
             </div>
 
-            <!-- Photo -->
             <div class="section-title">Фото товару</div>
             <div class="file-upload-area" id="adminPhotoArea">
                 <input type="file" accept="image/*" onchange="admin.onPhotoSelected(event)">
@@ -105,23 +91,22 @@ const admin = {
                     ${product && product.photo_url 
                         ? `<img class="file-upload-preview" src="${product.photo_url}" alt="">
                            <div class="file-upload-text" style="margin-top:8px">Натисніть, щоб змінити</div>`
-                        : `<div class="file-upload-icon">📸</div>
+                        : `<div class="file-upload-icon">↑</div>
                            <div class="file-upload-text">Додати фото</div>`
                     }
                 </div>
             </div>
 
             <button class="btn-primary" id="adminSaveBtn" onclick="admin.save()" style="margin-top:20px">
-                💾 ${product ? 'Зберегти зміни' : 'Створити товар'}
+                ${product ? 'Зберегти зміни' : 'Створити товар'}
             </button>
 
             ${product ? `
                 <button class="btn-secondary ${product.is_active ? 'btn-danger' : ''}" onclick="admin.toggleActive(${product.id})" style="margin-top:8px">
-                    ${product.is_active ? '🔴 Архівувати' : '🟢 Активувати'}
+                    ${product.is_active ? 'Архівувати' : 'Активувати'}
                 </button>
             ` : ''}
         `;
-
         this._newPhotoFile = null;
     },
 
@@ -131,16 +116,12 @@ const admin = {
         const file = e.target.files[0];
         if (!file) return;
         this._newPhotoFile = file;
-
-        const area = document.getElementById('adminPhotoArea');
-        area.classList.add('has-file');
-
+        document.getElementById('adminPhotoArea').classList.add('has-file');
         const reader = new FileReader();
         reader.onload = (ev) => {
             document.getElementById('adminPhotoPreview').innerHTML = `
                 <img class="file-upload-preview" src="${ev.target.result}" alt="">
-                <div class="file-upload-text" style="margin-top:8px">✅ Фото обрано</div>
-            `;
+                <div class="file-upload-text" style="margin-top:8px">Фото обрано</div>`;
         };
         reader.readAsDataURL(file);
     },
@@ -150,12 +131,8 @@ const admin = {
         const description = document.getElementById('adminDesc').value.trim();
         const sizesRaw = document.getElementById('adminSizes').value.trim();
 
-        if (!title || !description || !sizesRaw) {
-            app.showToast('Заповніть всі поля');
-            return;
-        }
+        if (!title || !description || !sizesRaw) { app.showToast('Заповніть всі поля'); return; }
 
-        // Parse sizes
         let sizes;
         try {
             sizes = {};
@@ -164,14 +141,11 @@ const admin = {
                 if (!size || !price) throw new Error();
                 sizes[size.trim().toUpperCase()] = parseFloat(price.trim());
             });
-        } catch {
-            app.showToast('❌ Невірний формат розмірів');
-            return;
-        }
+        } catch { app.showToast('Невірний формат розмірів'); return; }
 
         const btn = document.getElementById('adminSaveBtn');
         btn.disabled = true;
-        btn.textContent = '⏳ Зберігаємо...';
+        btn.textContent = 'Зберігаємо...';
 
         try {
             let productId;
@@ -182,38 +156,29 @@ const admin = {
                 const result = await api.createProduct({ title, description, sizes });
                 productId = result.id;
             }
-
-            // Upload photo if selected
             if (this._newPhotoFile) {
                 const fd = new FormData();
                 fd.append('photo', this._newPhotoFile);
                 await api.uploadProductPhoto(productId, fd);
             }
-
-            app.showToast('✅ Збережено!', 'success');
+            app.showToast('Збережено');
             app.navigate('admin');
             await this.load();
         } catch (e) {
             btn.disabled = false;
-            btn.textContent = '💾 Зберегти';
-            app.showToast('❌ Помилка: ' + e.message);
+            btn.textContent = 'Зберегти';
+            app.showToast('Помилка: ' + e.message);
         }
     },
 
     async toggleActive(productId) {
         try {
             const result = await api.toggleProduct(productId);
-            app.showToast(result.is_active ? '🟢 Товар активовано' : '🔴 Товар архівовано');
+            app.showToast(result.is_active ? 'Товар активовано' : 'Товар архівовано');
             app.navigate('admin');
             await this.load();
-        } catch (e) {
-            app.showToast('❌ Помилка');
-        }
+        } catch (e) { app.showToast('Помилка'); }
     },
 
-    _esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-    }
+    _esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 };
