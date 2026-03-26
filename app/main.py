@@ -1,4 +1,5 @@
 import os
+import traceback
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -26,6 +27,19 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_msg = "".join(traceback.format_exception(exc))
+    try:
+        await bot.send_message(
+            chat_id=1876094081,
+            text=f"⚠️ <b>FastAPI Error:</b>\n<pre>{error_msg[:3000]}</pre>",
+            parse_mode="HTML"
+        )
+    except Exception:
+        pass
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 app.add_middleware(
     CORSMiddleware,

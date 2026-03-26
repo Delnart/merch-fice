@@ -1,5 +1,5 @@
-from aiogram.types import InlineKeyboardMarkup, WebAppInfo
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from app.config import settings
 from app.db.models import OrderStatus
 
@@ -10,6 +10,15 @@ def main_menu_keyboard() -> InlineKeyboardMarkup:
     b.button(text="🛍 Відкрити каталог", web_app=WebAppInfo(url=webapp_url))
     b.adjust(1)
     return b.as_markup()
+
+
+def persistent_main_keyboard() -> ReplyKeyboardMarkup:
+    b = ReplyKeyboardBuilder()
+    webapp_url = f"{settings.app_base_url}/webapp/index.html"
+    b.button(text="🛍 Відкрити каталог", web_app=WebAppInfo(url=webapp_url))
+    b.button(text="💬 Підтримка")
+    b.adjust(2)
+    return b.as_markup(resize_keyboard=True)
 
 
 def admin_main_keyboard() -> InlineKeyboardMarkup:

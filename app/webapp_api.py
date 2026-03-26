@@ -341,7 +341,7 @@ async def api_recipient_set_default(recipient_id: int, telegram_id: int = Depend
 # ── Checkout endpoint ────────────────────────────────────────────────────────
 
 def _delivery_label(method: str) -> str:
-    return {"nova_poshta": "Нова Пошта", "campus": "В корпусі", "dayf": "DayF"}.get(method, method)
+    return {"nova_poshta": "Нова Пошта", "campus": "На DayF", "dayf": "DayF"}.get(method, method)
 
 
 @router.post("/checkout")
@@ -399,7 +399,7 @@ async def api_checkout(
 
     # Build address
     if delivery_method == "campus":
-        address = "В корпусі"
+        address = "На DayF"
     elif delivery_method == "dayf":
         address = "На DayF"
     else:
@@ -469,7 +469,7 @@ async def _notify_admin_chat(binding, order, name, phone, delivery_method, addre
 
     lines = [
         f"🔔 <b>Замовлення #{order.id}</b> [{status_labels.get(order.status, '')}]",
-        f"👤 Клієнт: ({order.telegram_id})",
+        f"👤 Клієнт: <a href='tg://user?id={order.telegram_id}'>Профіль ({order.telegram_id})</a>",
         f"📋 Отримувач: {name}",
         f"📞 Телефон: {phone}",
         f"🚚 Спосіб: {_delivery_label(delivery_method)} | Адреса: {address}",

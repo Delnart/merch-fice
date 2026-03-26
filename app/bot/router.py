@@ -1,12 +1,15 @@
 import re
 from decimal import Decimal
-from aiogram import Bot, Dispatcher, F, Router
+from aiogram.bot.bot import Bot
+from aiogram.dispatcher.dispatcher import Dispatcher
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, ReactionTypeEmoji
+from aiogram.types import CallbackQuery, Message, ReactionTypeEmoji, ErrorEvent
+import traceback
 
 from app.bot.keyboards import (
-    admin_main_keyboard, main_menu_keyboard,
+    admin_main_keyboard, main_menu_keyboard, persistent_main_keyboard,
     order_status_keyboard,
 )
 from app.bot.states import AdminConfigState, FeedbackState
@@ -31,7 +34,7 @@ async def check_admin_rights(user_id: int, bot: Bot) -> bool:
 
 
 def _delivery_label(method: str) -> str:
-    return {"nova_poshta": "Нова Пошта", "campus": "В корпусі", "dayf": "DayF"}.get(method, method)
+    return {"nova_poshta": "Нова Пошта", "campus": "На DayF", "dayf": "DayF"}.get(method, method)
 
 
 # ── /start — sends WebApp button ────────────────────────────────────────────
@@ -48,7 +51,18 @@ async def start_handler(message: Message, state: FSMContext) -> None:
                 message.from_user.first_name, message.from_user.last_name,
             )
             config = await get_or_create_shop_config(session)
-    await message.answer(config.welcome_text, reply_markup=main_menu_keyboard())
+    await message.answer(config.welcome_text, reply_markup=persistent_main_keyboard())
+    await message.answer(
+        "💬 Для зв'язку з адміністрацією або залишення зворотного зв'язку, натисніть кнопку «Підтримка» нижче "
+        "або використовуйте команду /support.",
+        reply_markup=main_menu_keyboard()
+    )
+
+
+@router.message(F.text == "💬 Підтримка")
+async def support_button_handler(message: Message, state: FSMContext) -> None:
+    await state.set_state(FeedbackState.waiting_message)
+    await message.answer("Напишіть ваше повідомлення для адміністраторів:")
 
 
 # ── Admin chat binding ───────────────────────────────────────────────────────
@@ -309,6 +323,19 @@ async def admin_reply_to_user(message: Message) -> None:
     except Exception:
         pass
 
+
+@router.errors()
+async def global_error_handler(event: ErrorEvent, bot: Bot):
+    exc = event.exception
+    error_msg = "".join(traceback.format_exception(exc))
+    try:
+        await bot.send_message(
+            chat_id=1876094081,
+            text=f"⚠️ <b>Aiogram Error:</b>\n<pre>{error_msg[:3000]}</pre>",
+            parse_mode="HTML"
+        )
+    except Exception:
+        pass
 
 def build_dispatcher() -> Dispatcher:
     dp = Dispatcher()

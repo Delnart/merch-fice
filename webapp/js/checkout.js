@@ -94,7 +94,7 @@ const checkout = {
             </div>
             <div class="selection-card" onclick="checkout.selectDelivery('campus', this)">
                 <div class="radio-dot"></div>
-                <span class="selection-card-text">В корпусі</span>
+                <span class="selection-card-text">На DayF</span>
             </div>
             ${this.config.is_dayf_delivery_enabled ? `
                 <div class="selection-card" onclick="checkout.selectDelivery('dayf', this)">
@@ -205,7 +205,7 @@ const checkout = {
             formData.append('delivery_method', this.selectedDelivery);
             const address = this.selectedDelivery === 'nova_poshta' 
                 ? document.getElementById('checkoutAddress').value.trim()
-                : (this.selectedDelivery === 'campus' ? 'В корпусі' : 'На DayF');
+                : (this.selectedDelivery === 'campus' ? 'На DayF' : 'На DayF');
             formData.append('delivery_address', address);
 
             if (this.selectedRecipientId) {
