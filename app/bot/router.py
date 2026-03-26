@@ -1,8 +1,6 @@
 import re
 from decimal import Decimal
-from aiogram.bot.bot import Bot
-from aiogram.dispatcher.dispatcher import Dispatcher
-from aiogram import F, Router
+from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, ReactionTypeEmoji, ErrorEvent
